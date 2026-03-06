@@ -2,6 +2,7 @@ import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
+import yfinance as yf
 
 # 頁面設定
 st.set_page_config(page_title="日本消費紀錄", page_icon="💴")
@@ -22,10 +23,27 @@ def init_connection():
     client = gspread.authorize(credentials)
     return client
 
+@st.cache_data(ttl=3600)  # TTL=3600 代表每 3600 秒 (1 小時) 重新抓取一次
+def get_realtime_rate():
+    try:
+        # JPYHKD=X 係 Yahoo Finance 裡面日圓兌港幣嘅代號
+        # 如果你想計台幣，可以轉做 JPYTWD=X
+        ticker = yf.Ticker("JPYHKD=X")
+        # 獲取最近一日嘅歷史數據，並抽出收盤價
+        todays_data = ticker.history(period="1d")
+        current_rate = todays_data['Close'].iloc[0]
+        return float(current_rate)
+    except Exception as e:
+        # 如果因為網絡問題拎唔到，就用一個預設安全匯率頂住先
+        st.warning("⚠️ 暫時無法獲取即時匯率，將使用預設匯率。")
+        return 0.052
+
 # 換成你自己的 Google Sheet 名稱
 SHEET_NAME = "tokyo052026" 
-EXCHANGE_RATE = 0.21  # 假設匯率，可自行調整
+EXCHANGE_RATE = get_realtime_rate()  # 假設匯率，可自行調整
 
+# 你可以喺畫面上顯示埋俾自己睇
+st.caption(f"📈 目前系統匯率：1 JPY = {EXCHANGE_RATE:.4f} HKD (每小時自動更新)")
 try:
     client = init_connection()
     sheet = client.open(SHEET_NAME).sheet1
@@ -68,3 +86,4 @@ with st.form("expense_form", clear_on_submit=True):
             st.success(f"✅ 成功紀錄！【{item}】 ¥{jpy_amount} (約 ${local_amount})")
 
             st.balloons()
+
