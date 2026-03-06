@@ -24,7 +24,7 @@ if not st.session_state.authenticated:
     pwd = st.text_input("請輸入通行密碼：", type="password")
     
     if st.button("解鎖 🔓", use_container_width=True):
-        if pwd == "tokyo2026":  # 呢度換成你想要嘅密碼
+        if pwd == "2026":  # 呢度換成你想要嘅密碼
             st.session_state.authenticated = True
             st.rerun()  # 密碼啱，即刻重新載入畫面
         else:
@@ -35,17 +35,13 @@ if not st.session_state.authenticated:
 # 可以在右上角加個登出掣 (Optional)
 col1, col2 = st.columns([8, 2])
 with col1:
-    st.title("🇯🇵 日本旅費隨手記")
+    st.markdown("## 🇯🇵 日本旅費隨手記")
 with col2:
     if st.button("登出"):
         st.session_state.authenticated = False
         st.rerun()
 
 st.success("✅ 成功解鎖！")
-
-# 頁面設定
-st.set_page_config(page_title="日本消費紀錄", page_icon="💴")
-st.title("🇯🇵 日本旅費隨手記")
 
 # 連接 Google Sheets 的設定
 SCOPE = [
@@ -180,6 +176,7 @@ try:
         
 except Exception as e:
     st.error(f"無法讀取數據: {e}")
+
 
 
 
