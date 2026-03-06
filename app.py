@@ -3,6 +3,22 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 import yfinance as yf
+import pandas as pd
+import plotly.express as px
+
+
+# --- 簡單密碼鎖 ---
+# 喺 Streamlit 左邊欄位加個密碼輸入框
+app_password = st.sidebar.text_input("請輸入通行密碼 🔒", type="password")
+
+# 設定你同朋友知道嘅密碼 (例如: tokyo2026)
+if app_password != "2026":
+    st.warning("請輸入正確密碼以解鎖記帳功能！")
+    st.stop()  # 如果密碼唔啱，程式會喺度停低，唔會執行下面嘅 Code
+
+# 密碼正確先會執行以下嘅主程式
+st.success("解鎖成功！歡迎使用。")
+# ... 下面繼續放你原本連 Google Sheets 同表單嘅 Code ...
 
 # 頁面設定
 st.set_page_config(page_title="日本消費紀錄", page_icon="💴")
@@ -86,4 +102,59 @@ with st.form("expense_form", clear_on_submit=True):
             st.success(f"✅ 成功紀錄！【{item}】 ¥{jpy_amount} (約 ${local_amount})")
 
             st.balloons()
+
+st.divider() # 加條分隔線
+st.header("📊 旅費數據分析")
+
+# 1. 從 Google Sheets 獲取所有資料
+try:
+    # get_all_records() 會將有表頭嘅資料自動轉成 List of Dictionaries
+    records = sheet.get_all_records()
+    
+    if records:
+        df = pd.DataFrame(records)
+        
+        # 確保金額欄位係數字格式
+        df['JPY_Amount'] = pd.to_numeric(df['JPY_Amount'], errors='coerce')
+        df['Local_Amount'] = pd.to_numeric(df['Local_Amount'], errors='coerce')
+        
+        # --- 顯示目前總花費 ---
+        total_jpy = df['JPY_Amount'].sum()
+        total_local = df['Local_Amount'].sum()
+        
+        # 用 st.metric 顯示超大字體嘅 KPI 數字
+        col1, col2 = st.columns(2)
+        col1.metric("目前總花費 (日圓 💴)", f"¥ {total_jpy:,.0f}")
+        col2.metric("目前總花費 (約合港幣 🇭🇰)", f"$ {total_local:,.2f}")
+        
+        # --- 計算並顯示各類別百分比 (%) ---
+        st.subheader("各類別消費佔比")
+        
+        # 用 Pandas Groupby 將各類別嘅日圓總數加埋
+        category_sum = df.groupby('Category')['JPY_Amount'].sum().reset_index()
+        
+        # 用 Plotly 畫一個互動式圓餅圖 (Pie Chart)
+        fig = px.pie(
+            category_sum, 
+            values='JPY_Amount', 
+            names='Category',
+            hole=0.4, # 變成甜甜圈圖，靚啲
+            color_discrete_sequence=px.colors.qualitative.Pastel
+        )
+        
+        # 隱藏圖表背景，配合 Streamlit 主題
+        fig.update_layout(margin=dict(t=0, b=0, l=0, r=0)) 
+        
+        # 將圖表顯示喺網頁上
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # 如果你想睇埋每筆詳細紀錄，可以加個 Expander 隱藏住個 Table
+        with st.expander("📝 查看所有詳細紀錄"):
+            st.dataframe(df, use_container_width=True)
+            
+    else:
+        st.info("目前仲未有任何消費紀錄，快啲記低第一筆啦！")
+        
+except Exception as e:
+    st.error(f"無法讀取數據: {e}")
 
