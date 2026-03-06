@@ -23,7 +23,7 @@ def init_connection():
     return client
 
 # 換成你自己的 Google Sheet 名稱
-SHEET_NAME = "Japan_Trip_2026" 
+SHEET_NAME = "tokyo052026" 
 EXCHANGE_RATE = 0.21  # 假設匯率，可自行調整
 
 try:
@@ -66,4 +66,5 @@ with st.form("expense_form", clear_on_submit=True):
             # 寫入 Google Sheets
             sheet.append_row(row_data)
             st.success(f"✅ 成功紀錄！【{item}】 ¥{jpy_amount} (約 ${local_amount})")
+
             st.balloons()
