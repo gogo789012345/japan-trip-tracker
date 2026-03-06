@@ -7,18 +7,41 @@ import pandas as pd
 import plotly.express as px
 
 
-# --- 簡單密碼鎖 ---
-# 喺 Streamlit 左邊欄位加個密碼輸入框
-app_password = st.sidebar.text_input("請輸入通行密碼 🔒", type="password")
+st.set_page_config(page_title="日本消費紀錄", page_icon="💴", layout="centered")
 
-# 設定你同朋友知道嘅密碼 (例如: tokyo2026)
-if app_password != "2026":
-    st.warning("請輸入正確密碼以解鎖記帳功能！")
-    st.stop()  # 如果密碼唔啱，程式會喺度停低，唔會執行下面嘅 Code
+# --- 1. 建立高階密碼鎖 (主畫面版) ---
 
-# 密碼正確先會執行以下嘅主程式
-st.success("解鎖成功！歡迎使用。")
-# ... 下面繼續放你原本連 Google Sheets 同表單嘅 Code ...
+# 初始化登入狀態
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+# 如果仲未登入，就顯示呢個登入畫面
+if not st.session_state.authenticated:
+    st.title("🔒 旅費記帳 App 已上鎖")
+    st.info("為咗保護你嘅財務資料，請先輸入密碼。")
+    
+    # 喺主畫面顯示密碼框
+    pwd = st.text_input("請輸入通行密碼：", type="password")
+    
+    if st.button("解鎖 🔓", use_container_width=True):
+        if pwd == "tokyo2026":  # 呢度換成你想要嘅密碼
+            st.session_state.authenticated = True
+            st.rerun()  # 密碼啱，即刻重新載入畫面
+        else:
+            st.error("密碼錯誤，請再試一次！")
+            
+    st.stop()  # ⚠️ 呢行好重要！未登入之前，程式會喺度停低，絕對唔會行下面嘅 Code
+
+# 可以在右上角加個登出掣 (Optional)
+col1, col2 = st.columns([8, 2])
+with col1:
+    st.title("🇯🇵 日本旅費隨手記")
+with col2:
+    if st.button("登出"):
+        st.session_state.authenticated = False
+        st.rerun()
+
+st.success("✅ 成功解鎖！")
 
 # 頁面設定
 st.set_page_config(page_title="日本消費紀錄", page_icon="💴")
@@ -157,5 +180,6 @@ try:
         
 except Exception as e:
     st.error(f"無法讀取數據: {e}")
+
 
 
