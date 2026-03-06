@@ -78,7 +78,7 @@ SHEET_NAME = "tokyo052026"
 EXCHANGE_RATE = get_realtime_rate()  # 假設匯率，可自行調整
 
 # 你可以喺畫面上顯示埋俾自己睇
-st.caption(f"📈 目前系統匯率：1 JPY = {EXCHANGE_RATE:.4f} HKD (每小時自動更新)")
+st.caption(f"📈 目前系統匯率：1 JPY = {EXCHANGE_RATE:.4f} HKD (每15分鐘自動更新)")
 try:
     client = init_connection()
     sheet = client.open(SHEET_NAME).sheet1
@@ -176,6 +176,7 @@ try:
         
 except Exception as e:
     st.error(f"無法讀取數據: {e}")
+
 
 
 
