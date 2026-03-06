@@ -39,7 +39,7 @@ def init_connection():
     client = gspread.authorize(credentials)
     return client
 
-@st.cache_data(ttl=3600)  # TTL=3600 代表每 3600 秒 (1 小時) 重新抓取一次
+@st.cache_data(ttl=900)  # TTL=3600 代表每 3600 秒 (1 小時) 重新抓取一次
 def get_realtime_rate():
     try:
         # JPYHKD=X 係 Yahoo Finance 裡面日圓兌港幣嘅代號
@@ -157,4 +157,5 @@ try:
         
 except Exception as e:
     st.error(f"無法讀取數據: {e}")
+
 
